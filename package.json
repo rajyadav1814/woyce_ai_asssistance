@@ -1,0 +1,344 @@
+{
+  "name": "woyce-ai-assistance",
+  "displayName": "Woyce AI Assistance",
+  "description": "AI coding assistant for VS Code: chat, image analysis, edit, fix and refactor code with Claude, ChatGPT, Gemini or GitHub Copilot \u2014 sign in or bring an API key.",
+  "version": "0.1.0",
+  "publisher": "woyce",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "AI",
+    "Chat",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "ai",
+    "assistant",
+    "chat",
+    "chatgpt",
+    "claude",
+    "copilot",
+    "gemini",
+    "image",
+    "openai",
+    "vision"
+  ],
+  "icon": "media/icon.png",
+  "main": "./dist/extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "woyce",
+          "title": "Woyce Code Assistance",
+          "icon": "media/woyce.png"
+        }
+      ]
+    },
+    "views": {
+      "woyce": [
+        {
+          "type": "webview",
+          "id": "woyce.chatView",
+          "name": "Chat"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "woyce.newChat",
+        "title": "New Chat",
+        "category": "Woyce",
+        "icon": "$(add)"
+      },
+      {
+        "command": "woyce.focusChat",
+        "title": "Focus Chat",
+        "category": "Woyce"
+      },
+      {
+        "command": "woyce.explainSelection",
+        "title": "Explain Selection",
+        "category": "Woyce"
+      },
+      {
+        "command": "woyce.fixSelection",
+        "title": "Fix Selection",
+        "category": "Woyce"
+      },
+      {
+        "command": "woyce.refactorSelection",
+        "title": "Refactor Selection",
+        "category": "Woyce"
+      },
+      {
+        "command": "woyce.selectProvider",
+        "title": "Select AI Provider (Claude / ChatGPT / Gemini / Copilot)",
+        "category": "Woyce",
+        "icon": "$(hubot)"
+      },
+      {
+        "command": "woyce.setApiKey",
+        "title": "Set API Key",
+        "category": "Woyce"
+      },
+      {
+        "command": "woyce.clearApiKey",
+        "title": "Clear API Key",
+        "category": "Woyce"
+      },
+      {
+        "command": "woyce.editSelection",
+        "title": "Edit Selection with Instruction\u2026",
+        "category": "Woyce"
+      },
+      {
+        "command": "woyce.addDocs",
+        "title": "Add Documentation to Selection",
+        "category": "Woyce"
+      },
+      {
+        "command": "woyce.generateTests",
+        "title": "Generate Tests for Selection",
+        "category": "Woyce"
+      },
+      {
+        "command": "woyce.toggleInlineCompletions",
+        "title": "Toggle Inline Completions",
+        "category": "Woyce"
+      },
+      {
+        "command": "woyce.signIn",
+        "title": "Connect AI Provider\u2026 (Sign in / API Key)",
+        "category": "Woyce"
+      },
+      {
+        "command": "woyce.signOutGoogle",
+        "title": "Sign Out of Google",
+        "category": "Woyce"
+      },
+      {
+        "command": "woyce.selectCopilotModel",
+        "title": "Select Copilot Model",
+        "category": "Woyce"
+      },
+      {
+        "command": "woyce.askAboutImage",
+        "title": "Ask About Image\u2026",
+        "category": "Woyce"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "woyce.newChat",
+          "when": "view == woyce.chatView",
+          "group": "navigation"
+        },
+        {
+          "command": "woyce.selectProvider",
+          "when": "view == woyce.chatView",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "submenu": "woyce.editorMenu",
+          "when": "editorHasSelection",
+          "group": "9_woyce"
+        }
+      ],
+      "woyce.editorMenu": [
+        {
+          "command": "woyce.editSelection",
+          "group": "1_edit@1"
+        },
+        {
+          "command": "woyce.fixSelection",
+          "group": "1_edit@2"
+        },
+        {
+          "command": "woyce.refactorSelection",
+          "group": "1_edit@3"
+        },
+        {
+          "command": "woyce.addDocs",
+          "group": "1_edit@4"
+        },
+        {
+          "command": "woyce.explainSelection",
+          "group": "2_chat@1"
+        },
+        {
+          "command": "woyce.generateTests",
+          "group": "2_chat@2"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "woyce.askAboutImage",
+          "when": "resourceExtname =~ /\\.(png|jpe?g|gif|webp)$/i",
+          "group": "9_woyce"
+        }
+      ]
+    },
+    "submenus": [
+      {
+        "id": "woyce.editorMenu",
+        "label": "Woyce AI"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "woyce.focusChat",
+        "key": "ctrl+alt+w",
+        "mac": "cmd+alt+w"
+      },
+      {
+        "command": "woyce.editSelection",
+        "key": "ctrl+alt+e",
+        "mac": "cmd+alt+e",
+        "when": "editorHasSelection"
+      }
+    ],
+    "configuration": {
+      "title": "Woyce Code Assistance",
+      "properties": {
+        "woyce.provider": {
+          "type": "string",
+          "enum": [
+            "anthropic",
+            "openai",
+            "gemini",
+            "copilot"
+          ],
+          "enumItemLabels": [
+            "Claude (Anthropic)",
+            "ChatGPT (OpenAI)",
+            "Gemini (Google)",
+            "GitHub Copilot (GPT / Claude / Gemini)"
+          ],
+          "default": "anthropic",
+          "description": "Which AI provider answers chat and code actions."
+        },
+        "woyce.anthropic.model": {
+          "type": "string",
+          "default": "claude-sonnet-5-5",
+          "description": "Claude model ID."
+        },
+        "woyce.openai.model": {
+          "type": "string",
+          "default": "gpt-4o",
+          "description": "OpenAI model ID (e.g. gpt-4o)."
+        },
+        "woyce.openai.baseUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Optional OpenAI-compatible endpoint (e.g. http://localhost:11434/v1 for Ollama). Empty uses https://api.openai.com/v1."
+        },
+        "woyce.gemini.model": {
+          "type": "string",
+          "default": "gemini-2.5-flash",
+          "description": "Gemini model ID."
+        },
+        "woyce.maxTokens": {
+          "type": "number",
+          "default": 4096,
+          "minimum": 256,
+          "description": "Maximum tokens in each response."
+        },
+        "woyce.systemPrompt": {
+          "type": "string",
+          "default": "You are Woyce, an expert AI coding assistant inside VS Code. Be concise and accurate. Put code in fenced blocks with a language tag.",
+          "editPresentation": "multilineText",
+          "description": "System prompt sent with every request."
+        },
+        "woyce.defaultContext": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "file",
+            "none"
+          ],
+          "enumDescriptions": [
+            "Attach the selection if there is one",
+            "Attach the whole active file",
+            "Attach nothing"
+          ],
+          "default": "auto",
+          "description": "Default context attached to chat messages (changeable in the chat panel)."
+        },
+        "woyce.maxContextChars": {
+          "type": "number",
+          "default": 40000,
+          "minimum": 1000,
+          "description": "Maximum characters of a file attached as context; longer files are truncated."
+        },
+        "woyce.edit.preview": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show a diff and ask before applying AI edits to your code. When off, edits apply immediately (undo with Ctrl+Z)."
+        },
+        "woyce.inline.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show AI ghost-text completions as you type. Sends code around the cursor to your provider after each pause, so it uses API credits."
+        },
+        "woyce.inline.delay": {
+          "type": "number",
+          "default": 500,
+          "minimum": 100,
+          "description": "Milliseconds to wait after typing stops before requesting a completion."
+        },
+        "woyce.inline.maxTokens": {
+          "type": "number",
+          "default": 256,
+          "minimum": 16,
+          "description": "Maximum tokens per inline completion."
+        },
+        "woyce.copilot.model": {
+          "type": "string",
+          "default": "",
+          "description": "Copilot model ID, family or name. Empty picks the first available. Use 'Woyce: Select Copilot Model' to choose from a list."
+        },
+        "woyce.gemini.oauthClientId": {
+          "type": "string",
+          "default": "",
+          "description": "OAuth client ID (type: Desktop app) for 'Sign in with Google'. Set up by 'Woyce: Connect AI Provider\u2026'."
+        },
+        "woyce.gemini.googleProject": {
+          "type": "string",
+          "default": "",
+          "description": "Google Cloud project ID or number billed for Google-sign-in requests. Empty uses the project of the OAuth client ID."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "npm run check-types && node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "package": "npm run check-types && node esbuild.js --production",
+    "check-types": "tsc --noEmit",
+    "vsce:package": "vsce package --no-dependencies",
+    "test": "esbuild test/*.test.ts --bundle --platform=node --outdir=dist-test --log-level=warning && node --test dist-test/"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.5.0"
+  },
+  "galleryBanner": {
+    "color": "#101612",
+    "theme": "dark"
+  },
+  "pricing": "Free"
+}
