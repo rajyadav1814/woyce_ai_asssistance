@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { AiClient, ChatMessage, NotConnectedError } from './aiClient';
 import { ImageAttachment } from './providers';
-import { buildChatContext, ContextMode } from './context';
+import { buildChatContext, buildProjectContext, ContextMode } from './context';
 import { EditService } from './editService';
 import { offerConnect } from './errors';
 import { sanitizeImages } from './util/images';
@@ -26,7 +26,7 @@ type FromWebview =
   | { type: 'send'; text: string; context: ContextMode; images?: unknown }
   | { type: 'stop' }
   | { type: 'regenerate' }
-  | { type: 'apply'; code: string }
+  | { type: 'apply'; code: string; path?: string }
   | { type: 'copy'; code: string };
 
 export interface AskRequest {
@@ -128,7 +128,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         await this.regenerate();
         return;
       case 'apply':
-        await this.edits.applyFromChat(msg.code);
+        await this.edits.applyFromChat(msg.code, typeof msg.path === 'string' ? msg.path : undefined);
         return;
       case 'copy':
         await vscode.env.clipboard.writeText(msg.code);
@@ -144,7 +144,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     }
     text ||= 'Describe this image in detail. If it shows code, a UI, a diagram or an error, explain what matters for the developer.';
     const maxChars = vscode.workspace.getConfiguration('woyce').get<number>('maxContextChars', 40000);
-    const ctx = buildChatContext(mode, maxChars);
+    const ctx = mode === 'project' ? await buildProjectContext(maxChars) : buildChatContext(mode, maxChars);
     await this.run(
       {
         role: 'user',

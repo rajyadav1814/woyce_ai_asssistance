@@ -4,6 +4,7 @@ import { getEditor } from './context';
 import { reportAiError } from './errors';
 import { buildEditPrompt, EDIT_SYSTEM } from './prompts';
 import { extractCode, matchTrailingNewline } from './util/code';
+import { resolveInWorkspace } from './util/project';
 
 const PROPOSED_SCHEME = 'woyce-proposed';
 const CONTEXT_LINES = 30;
@@ -93,8 +94,14 @@ export class EditService implements vscode.Disposable {
     await this.propose(doc, range, code, req.title);
   }
 
-  /** Applies code from a chat block: previews a replacement of the selection, or inserts at the cursor. */
-  async applyFromChat(code: string): Promise<void> {
+  /**
+   * Applies code from a chat block. With a file path: previews a replacement of that whole file (or creates it).
+   * Without: previews a replacement of the selection, or inserts at the cursor.
+   */
+  async applyFromChat(code: string, filePath?: string): Promise<void> {
+    if (filePath) {
+      return this.applyToFile(filePath, code);
+    }
     const editor = getEditor();
     if (!editor) {
       vscode.window.showWarningMessage('Woyce: open a file to apply code to.');
@@ -105,6 +112,50 @@ export class EditService implements vscode.Disposable {
       return;
     }
     await this.propose(editor.document, editor.selection, code, 'Apply');
+  }
+
+  private async applyToFile(filePath: string, code: string): Promise<void> {
+    const roots = vscode.workspace.workspaceFolders?.map((f) => f.uri.fsPath) ?? [];
+    const candidates = resolveInWorkspace(filePath, roots);
+    if (!candidates.length) {
+      vscode.window.showWarningMessage(`Woyce: ${filePath} is not inside an open workspace folder, so it was not applied.`);
+      return;
+    }
+    let uri = vscode.Uri.file(candidates[0]);
+    let exists = false;
+    for (const candidate of candidates) {
+      try {
+        await vscode.workspace.fs.stat(vscode.Uri.file(candidate));
+        uri = vscode.Uri.file(candidate);
+        exists = true;
+        break;
+      } catch {
+        // try the next workspace folder
+      }
+    }
+
+    if (exists) {
+      const doc = await vscode.workspace.openTextDocument(uri);
+      const whole = new vscode.Range(0, 0, doc.lineCount - 1, doc.lineAt(doc.lineCount - 1).range.end.character);
+      await this.propose(doc, whole, code, 'Apply');
+      return;
+    }
+
+    const name = vscode.workspace.asRelativePath(uri);
+    if (vscode.workspace.getConfiguration('woyce').get<boolean>('edit.preview', true)) {
+      const choice = await vscode.window.showInformationMessage(`Create ${name} with Woyce’s proposed contents?`, 'Create', 'Discard');
+      if (choice !== 'Create') {
+        return;
+      }
+    }
+    const edit = new vscode.WorkspaceEdit();
+    edit.createFile(uri, { ignoreIfExists: true });
+    edit.insert(uri, new vscode.Position(0, 0), code.replace(/\n*$/, '\n'));
+    if (await vscode.workspace.applyEdit(edit)) {
+      await vscode.window.showTextDocument(uri);
+    } else {
+      vscode.window.showErrorMessage(`Woyce: could not create ${name}.`);
+    }
   }
 
   private async propose(doc: vscode.TextDocument, range: vscode.Range, newCode: string, title: string): Promise<void> {

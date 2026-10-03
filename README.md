@@ -7,7 +7,7 @@ A VS Code extension that puts an AI coding assistant in your sidebar. Works with
 ### Chat
 - Sidebar chat with streaming replies, **Stop** (keeps what was already written) and **Regenerate**.
 - Full markdown: headings, lists, tables, quotes, links and code blocks with **Copy** and **Apply** buttons.
-- **Context picker**: attach the current selection, the whole file, or nothing.
+- **Context picker**: attach the current selection, the whole file, the **whole project** (file list, key config files, open files), or nothing.
 - Conversation is saved per workspace and survives reloads; **New Chat** clears it.
 - Switch provider any time (header button, title bar, or **Woyce: Select AI Provider**).
 
@@ -71,8 +71,8 @@ Requests are billed to that Google project (override with `woyce.gemini.googlePr
 | `woyce.gemini.model` | `gemini-2.5-flash` | Gemini model ID |
 | `woyce.maxTokens` | `4096` | Max tokens per response |
 | `woyce.systemPrompt` | coding-assistant prompt | System prompt |
-| `woyce.defaultContext` | `auto` | Context attached to chat: `auto` (selection), `file`, `none` |
-| `woyce.maxContextChars` | `40000` | Truncate attached files beyond this size |
+| `woyce.defaultContext` | `auto` | Context attached to chat: `auto` (selection), `file`, `project`, `none` |
+| `woyce.maxContextChars` | `40000` | Truncate attached context (a file or the project overview) beyond this size |
 | `woyce.edit.preview` | `true` | Show a diff before applying AI edits |
 | `woyce.inline.enabled` | `false` | Inline ghost-text completions |
 | `woyce.inline.delay` | `500` | Ms to wait after typing before requesting |

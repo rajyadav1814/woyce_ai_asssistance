@@ -36,6 +36,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
         <select id="context" aria-label="Context to attach">
           <option value="auto">Selection</option>
           <option value="file">Current file</option>
+          <option value="project">Whole project</option>
           <option value="none">None</option>
         </select>
       </label>

@@ -261,11 +261,13 @@
           "enum": [
             "auto",
             "file",
+            "project",
             "none"
           ],
           "enumDescriptions": [
             "Attach the selection if there is one",
             "Attach the whole active file",
+            "Attach the project's file list, key config files and open files",
             "Attach nothing"
           ],
           "default": "auto",
@@ -275,7 +277,7 @@
           "type": "number",
           "default": 40000,
           "minimum": 1000,
-          "description": "Maximum characters of a file attached as context; longer files are truncated."
+          "description": "Maximum characters of context attached to a message (a file, or the whole-project overview); longer content is truncated."
         },
         "woyce.edit.preview": {
           "type": "boolean",

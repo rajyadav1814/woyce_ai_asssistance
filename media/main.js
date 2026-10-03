@@ -23,6 +23,7 @@
   let pending = [];
 
   const QUICK_ACTIONS = [
+    ['Analyze project', 'Analyze this project: what it does, how it is structured, the main entry points, and any problems or improvements worth making.', 'project'],
     ['Explain this file', 'Explain what this file does and how it is structured.', 'file'],
     ['Find bugs', 'Review this code for bugs and risky patterns. List concrete problems with fixes.', 'auto'],
     ['Write tests', 'Write unit tests for this code.', 'auto'],
@@ -75,17 +76,26 @@
     if (last < text.length) parent.appendChild(document.createTextNode(text.slice(last)));
   }
 
-  function renderCode(lang, code, closed) {
+  /** File path from a fence's info string: "ts src/a.ts", "ts:src/a.ts" or `ts title="src/a.ts"`. */
+  function pathFromInfo(info) {
+    const m = info.trim().match(/^[\w+#.-]*(?:[:\s]\s*(.+))?$/);
+    const raw = m && m[1] && m[1].trim().replace(/^(?:file|path|title|filename)\s*=\s*/i, '').replace(/^["'`]|["'`]$/g, '');
+    return raw && !/\s/.test(raw) && /[./]/.test(raw) ? raw : undefined;
+  }
+
+  function renderCode(lang, code, closed, path) {
     const wrap = el('div', 'code');
     const head = el('div', 'code-head');
-    head.appendChild(el('span', '', lang || 'code'));
+    head.appendChild(el('span', '', path ? path : lang || 'code'));
     if (closed) {
       const btns = el('span');
       for (const [label, type] of [['Copy', 'copy'], ['Apply', 'apply']]) {
         const b = el('button', '', label);
         b.type = 'button';
-        b.title = type === 'apply' ? 'Replace the selection (with diff preview) or insert at the cursor' : 'Copy to clipboard';
-        b.addEventListener('click', () => vscode.postMessage({ type, code }));
+        b.title = type === 'apply'
+          ? path ? 'Replace ' + path + ' with this code (or create it), after a diff preview' : 'Replace the selection (with diff preview) or insert at the cursor'
+          : 'Copy to clipboard';
+        b.addEventListener('click', () => vscode.postMessage({ type, code, path }));
         btns.appendChild(b);
       }
       head.appendChild(btns);
@@ -114,7 +124,7 @@
       const line = lines[i];
       let m;
 
-      if ((m = line.match(/^\s*```\s*([\w+#.-]*)\s*$/))) {
+      if ((m = line.match(/^\s*```\s*([\w+#.-]*(?:[:\s]\s*[^`]+)?)\s*$/))) {
         flush();
         const code = [];
         let closed = false;
@@ -122,7 +132,7 @@
           if (/^\s*```\s*$/.test(lines[i])) { closed = true; i++; break; }
           code.push(lines[i]);
         }
-        container.appendChild(renderCode(m[1], code.join('\n'), closed));
+        container.appendChild(renderCode(m[1].split(/[:\s]/)[0], code.join('\n'), closed, pathFromInfo(m[1])));
         continue;
       }
       if ((m = line.match(/^(#{1,6})\s+(.*)$/))) {
